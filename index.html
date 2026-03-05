@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Copilote</title>
+    <style>
+        :root {
+            --bg-color: #FAFAFA;
+            --primary: #4A90E2;
+            --text-dark: #333333;
+            --card-bg: #FFFFFF;
+            --success: #4CAF50;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .view { display: none; }
+        .view.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        h1, h2 { color: var(--text-dark); text-align: center; font-weight: 600; }
+        p { line-height: 1.5; color: #666; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
+        input[type="email"], input[type="text"], input[type="number"], select, textarea {
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit;
+        }
+        
+        button {
+            width: 100%; padding: 14px; background-color: var(--primary); color: white;
+            border: none; border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer; transition: background 0.2s;
+        }
+        button:hover { background-color: #357ABD; }
+        
+        .challenge-card {
+            background: #F0F4F8; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--primary);
+        }
+        .loading { text-align: center; color: var(--primary); font-weight: bold; display: none; margin-top: 15px;}
+        
+        .mood-selector { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .mood-btn { flex: 1; margin: 0 5px; background: #eee; color: #333; border: none; padding: 10px; border-radius: 8px; cursor: pointer; }
+        .mood-btn.selected { background: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div id="view-login" class="view active">
+        <h1>Bienvenue</h1>
+        <p style="text-align:center;">Ton espace personnel pour avancer à ton rythme.</p>
+        <div class="form-group">
+            <label>Ton email</label>
+            <input type="email" id="login-email" placeholder="email@exemple.com">
+        </div>
+        <button onclick="login()">Commencer</button>
+        <div id="loading-login" class="loading">Connexion en cours...</div>
+    </div>
+
+    <div id="view-diagnostic" class="view">
+        <h2>Faisons le point</h2>
+        <p>Prends quelques secondes pour évaluer ces domaines de 1 à 10.</p>
+        
+        <div class="form-group"><label>Énergie corporelle</label><input type="number" id="diag-energy" min="1" max="10" value="5"></div>
+        <div class="form-group"><label>Qualité du sommeil</label><input type="number" id="diag-sleep" min="1" max="10" value="5"></div>
+        <div class="form-group"><label>Moral / Mental</label><input type="number" id="diag-social" min="1" max="10" value="5"></div>
+        <div class="form-group">
+            <label>Comment te sens-tu en ce moment ? (Mots libres)</label>
+            <textarea id="diag-free" rows="3" placeholder="J'aimerais retrouver l'élan pour..."></textarea>
+        </div>
+        
+        <button onclick="submitDiagnostic()">Générer mes défis</button>
+        <div id="loading-diag" class="loading">Analyse et création de ton programme sur mesure...</div>
+    </div>
+
+    <div id="view-dashboard" class="view">
+        <h2>Tes défis de la semaine</h2>
+        <p>Choisis-en un aujourd'hui. Ces petits pas changent tout.</p>
+        
+        <div id="challenges-container">
+            </div>
+        
+        <button onclick="showView('view-daily')" style="margin-top: 20px; background-color: var(--success);">Faire mon Check-in du jour</button>
+    </div>
+
+    <div id="view-daily" class="view">
+        <h2>Check-in du jour</h2>
+        <div class="form-group">
+            <label>Humeur du jour</label>
+            <div class="mood-selector">
+                <button class="mood-btn" onclick="setMood(this, 'Bas')">Basse</button>
+                <button class="mood-btn selected" onclick="setMood(this, 'Moyenne')">Moyenne</button>
+                <button class="mood-btn" onclick="setMood(this, 'Top')">Excellente</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Quel défi as-tu essayé ?</label>
+            <select id="daily-action">
+                <option value="Aucun">Pas aujourd'hui (et c'est ok)</option>
+                <option value="Defi 1">Défi 1</option>
+                <option value="Defi 2">Défi 2</option>
+                <option value="Defi 3">Défi 3</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Une note pour toi-même ?</label>
+            <textarea id="daily-note" rows="2" placeholder="Une petite victoire, une pensée..."></textarea>
+        </div>
+        <button onclick="submitDaily()">Valider ma journée</button>
+        <div id="loading-daily" class="loading">Enregistrement...</div>
+    </div>
+
+</div>
+
+<script>
+    // --- CONFIGURATION ---
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzCINlvygsyP2iPouSRWAWn0Cn-rhWnn3zumV4KjKEHl5IZ7HqyKajpSB78xx0m_B4VzQ/exec";
+    let currentUser = null;
+    let currentMood = "Moyenne";
+
+    // --- NAVIGATION ---
+    function showView(viewId) {
+        document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+    }
+
+    // --- APPEL API GENERIQUE ---
+    async function apiCall(action, data) {
+        try {
+            const response = await fetch(GAS_URL, {
+                method: 'POST',
+                // Mode 'no-cors' n'est pas utilisé ici car Apps Script doit retourner des données.
+                // Assure-toi que ton déploiement Apps Script est bien sur "Tous les utilisateurs" (Anyone).
+                body: JSON.stringify({ action: action, data: data }),
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8', // Contourne le preflight CORS
+                }
+            });
+            return await response.json();
+        } catch (error) {
+            console.error("Erreur API:", error);
+            alert("Une erreur est survenue lors de la connexion au serveur.");
+            return { success: false };
+        }
+    }
+
+    // --- FONCTIONS ---
+    async function login() {
+        const email = document.getElementById('login-email').value;
+        if(!email) return alert('Merci de saisir un email');
+        
+        document.getElementById('loading-login').style.display = 'block';
+        const res = await apiCall('login', { email: email });
+        document.getElementById('loading-login').style.display = 'none';
+
+        if (res.success) {
+            currentUser = res.userId;
+            if (res.isNew) {
+                showView('view-diagnostic');
+            } else {
+                loadDashboard();
+            }
+        }
+    }
+
+    async function submitDiagnostic() {
+        const data = {
+            userId: currentUser,
+            energy: document.getElementById('diag-energy').value,
+            sleep: document.getElementById('diag-sleep').value,
+            social: document.getElementById('diag-social').value,
+            activity: 5,
+            life_satisfaction: 5,
+            free_text: document.getElementById('diag-free').value
+        };
+
+        document.getElementById('loading-diag').style.display = 'block';
+        const res = await apiCall('submitDiagnostic', data);
+        document.getElementById('loading-diag').style.display = 'none';
+
+        if(res.success && res.challenges) {
+            renderChallenges(res.challenges);
+            showView('view-dashboard');
+        } else {
+            alert("Erreur lors de la création des défis.");
+        }
+    }
+
+    async function loadDashboard() {
+        const res = await apiCall('getDashboardData', { userId: currentUser });
+        if(res.success && res.challenges && res.challenges.length > 0) {
+            renderChallenges(res.challenges);
+            showView('view-dashboard');
+        } else {
+            showView('view-diagnostic'); // Redirige si pas de défis
+        }
+    }
+
+    function renderChallenges(challenges) {
+        const container = document.getElementById('challenges-container');
+        container.innerHTML = '';
+        
+        // On met à jour le selecteur du daily check-in avec les vrais défis
+        const dailySelect = document.getElementById('daily-action');
+        dailySelect.innerHTML = '<option value="Aucun">Pas aujourd\'hui (et c\'est ok)</option>';
+
+        challenges.forEach((c, index) => {
+            // Affichage dans le dashboard
+            container.innerHTML += `<div class="challenge-card">🎯 ${c}</div>`;
+            
+            // Ajout dans le menu déroulant du check-in quotidien
+            if(c && c.trim() !== "") {
+                dailySelect.innerHTML += `<option value="${c}">${c}</option>`;
+            }
+        });
+    }
+
+    function setMood(btn, mood) {
+        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        currentMood = mood;
+    }
+
+    async function submitDaily() {
+        const data = {
+            userId: currentUser,
+            mood: currentMood,
+            action_done: document.getElementById('daily-action').value,
+            note: document.getElementById('daily-note').value
+        };
+
+        document.getElementById('loading-daily').style.display = 'block';
+        const res = await apiCall('dailyCheckin', data);
+        document.getElementById('loading-daily').style.display = 'none';
+
+        if(res.success) {
+            alert("Super, un pas de plus ! Bravo pour aujourd'hui.");
+            showView('view-dashboard');
+            // Réinitialiser le formulaire
+            document.getElementById('daily-note').value = '';
+            document.getElementById('daily-action').value = 'Aucun';
+            setMood(document.querySelectorAll('.mood-btn')[1], 'Moyenne'); // Remettre sur moyenne par défaut
+        }
+    }
+</script>
+
+</body>
+</html>
