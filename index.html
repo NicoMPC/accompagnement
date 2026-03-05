@@ -5,188 +5,265 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon Copilote</title>
     <style>
+        /* --- DESIGN SYSTEM MODERNE & DOUX --- */
         :root {
-            --bg-color: #FAFAFA;
-            --primary: #4A90E2;
-            --text-dark: #333333;
+            --bg-color: #F7F9FC;
+            --primary: #2B6CB0;
+            --primary-light: #EBF8FF;
+            --text-main: #2D3748;
+            --text-muted: #718096;
             --card-bg: #FFFFFF;
-            --success: #4CAF50;
+            --success: #48BB78;
         }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-dark);
+            color: var(--text-main);
             margin: 0;
             padding: 20px;
             display: flex;
             justify-content: center;
+            line-height: 1.6;
         }
+
         .container {
-            max-width: 500px;
+            max-width: 450px;
             width: 100%;
             background: var(--card-bg);
             padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+            position: relative;
         }
-        .view { display: none; }
-        .view.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        h1, h2 { color: var(--text-dark); text-align: center; font-weight: 600; }
-        p { line-height: 1.5; color: #666; }
-        
+
+        .view { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .view.active { display: block; opacity: 1; animation: slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1, h2 { color: var(--text-main); text-align: center; font-weight: 700; margin-bottom: 5px; }
+        h1 { font-size: 1.8em; }
+        h2 { font-size: 1.5em; }
+        .subtitle { text-align: center; color: var(--text-muted); font-size: 0.95em; margin-bottom: 25px; }
+
         .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9em; }
-        input[type="email"], input[type="text"], input[type="number"], select, textarea {
-            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit;
-        }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9em; color: var(--text-main); }
+        .helper-text { font-size: 0.8em; color: var(--text-muted); margin-top: -5px; margin-bottom: 8px; display: block; }
         
-        button {
-            width: 100%; padding: 14px; background-color: var(--primary); color: white;
-            border: none; border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer; transition: background 0.2s;
+        input[type="text"], input[type="email"], input[type="number"], textarea, select {
+            width: 100%; padding: 14px; border: 1.5px solid #E2E8F0; border-radius: 12px; 
+            box-sizing: border-box; font-family: inherit; font-size: 1em; background-color: #F7FAFC;
         }
-        button:hover { background-color: #357ABD; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); background-color: #FFF; }
+
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 8px; border-radius: 5px; background: #E2E8F0; outline: none; margin: 15px 0; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--primary); cursor: pointer; box-shadow: 0 2px 6px rgba(43, 108, 176, 0.3); }
+
+        button.btn-primary { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1.05em; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        button.btn-primary:hover { background-color: #2C5282; }
+        button.btn-success { background-color: var(--success); }
+        button.btn-success:hover { background-color: #38A169; }
+
+        .day-counter { text-align: center; font-size: 0.9em; font-weight: 600; color: var(--primary); background: var(--primary-light); padding: 5px 15px; border-radius: 20px; display: inline-block; margin: 0 auto 15px auto; }
+        .center-wrapper { text-align: center; }
         
-        .challenge-card {
-            background: #F0F4F8; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--primary);
-        }
-        .loading { text-align: center; color: var(--primary); font-weight: bold; display: none; margin-top: 15px;}
+        .challenge-card { background: var(--primary-light); padding: 16px; border-radius: 12px; margin-bottom: 12px; border-left: 4px solid var(--primary); font-weight: 500; color: #2A4365; }
         
-        .mood-selector { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        .mood-btn { flex: 1; margin: 0 5px; background: #eee; color: #333; border: none; padding: 10px; border-radius: 8px; cursor: pointer; }
-        .mood-btn.selected { background: var(--primary); color: white; }
+        .emoji-selector { display: flex; justify-content: space-between; margin-bottom: 25px; }
+        .emoji-btn { flex: 1; margin: 0 5px; background: #F7FAFC; border: 2px solid #E2E8F0; font-size: 2em; padding: 10px 0; border-radius: 16px; cursor: pointer; text-align: center; }
+        .emoji-btn.selected { border-color: var(--primary); background: var(--primary-light); transform: scale(1.05); }
+
+        .checkbox-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
+        .checkbox-label { display: flex; align-items: center; padding: 14px; background: #F7FAFC; border: 1.5px solid #E2E8F0; border-radius: 12px; cursor: pointer; font-weight: 500; }
+        .checkbox-label input { margin-right: 15px; transform: scale(1.3); accent-color: var(--primary); }
+
+        .badges-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .badge { background: #FFFAF0; border: 1px solid #FBD38D; color: #DD6B20; padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: 600; display: none; }
+        .loading { text-align: center; color: var(--primary); font-weight: bold; display: none; margin-top: 15px; font-size: 0.9em;}
     </style>
 </head>
 <body>
 
 <div class="container">
     
-    <div id="view-login" class="view active">
+    <div id="view-onboarding" class="view active">
         <h1>Bienvenue</h1>
-        <p style="text-align:center;">Ton espace personnel pour avancer à ton rythme.</p>
-        <div class="form-group">
-            <label>Ton email</label>
-            <input type="email" id="login-email" placeholder="email@exemple.com">
-        </div>
-        <button onclick="login()">Commencer</button>
-        <div id="loading-login" class="loading">Connexion en cours...</div>
+        <p class="subtitle">Faisons connaissance pour personnaliser ton parcours.</p>
+        <div class="form-group"><label>Ton prénom</label><input type="text" id="user-name" placeholder="Ex: Thomas"></div>
+        <div class="form-group"><label>Ton âge</label><input type="number" id="user-age" placeholder="Ex: 35"></div>
+        <div class="form-group"><label>Ta ville</label><input type="text" id="user-city" placeholder="Ex: La Rochelle"></div>
+        <div class="form-group"><label>Ton email</label><input type="email" id="user-email" placeholder="email@exemple.com"></div>
+        <button class="btn-primary" onclick="startOnboarding()">Continuer</button>
+        <div id="loading-login" class="loading">Création de ton espace...</div>
     </div>
 
     <div id="view-diagnostic" class="view">
-        <h2>Faisons le point</h2>
-        <p>Prends quelques secondes pour évaluer ces domaines de 1 à 10.</p>
+        <h2 id="diag-title">Faisons le point</h2>
+        <p class="subtitle">Où en es-tu aujourd'hui ? Glisse les jauges au ressenti.</p>
         
-        <div class="form-group"><label>Énergie corporelle</label><input type="number" id="diag-energy" min="1" max="10" value="5"></div>
-        <div class="form-group"><label>Qualité du sommeil</label><input type="number" id="diag-sleep" min="1" max="10" value="5"></div>
-        <div class="form-group"><label>Moral / Mental</label><input type="number" id="diag-social" min="1" max="10" value="5"></div>
-        <div class="form-group">
-            <label>Comment te sens-tu en ce moment ? (Mots libres)</label>
-            <textarea id="diag-free" rows="3" placeholder="J'aimerais retrouver l'élan pour..."></textarea>
-        </div>
+        <div class="form-group"><label>Mental & Émotions</label><span class="helper-text">Te sens-tu apaisé(e) ou surmené(e) ?</span><input type="range" id="diag-mental" min="1" max="10" value="5"></div>
+        <div class="form-group"><label>Corps & Énergie</label><span class="helper-text">Ton niveau de vitalité physique.</span><input type="range" id="diag-corps" min="1" max="10" value="5"></div>
+        <div class="form-group"><label>Relations</label><span class="helper-text">Ton lien avec les autres en ce moment.</span><input type="range" id="diag-relations" min="1" max="10" value="5"></div>
+        <div class="form-group"><label>Environnement & Quotidien</label><span class="helper-text">Te sens-tu bien dans ton lieu de vie ?</span><input type="range" id="diag-environnement" min="1" max="10" value="5"></div>
+        <div class="form-group"><label>Sens & Projets</label><span class="helper-text">L'alignement avec ce que tu fais.</span><input type="range" id="diag-sens" min="1" max="10" value="5"></div>
+        <div class="form-group"><label>Créativité & Plaisir</label><span class="helper-text">Prends-tu du temps pour ce que tu aimes ?</span><input type="range" id="diag-creativite" min="1" max="10" value="5"></div>
+        <div class="form-group"><label>Une pensée libre ?</label><span class="helper-text">Qu'aimerais-tu améliorer en ce moment ?</span><textarea id="diag-free" rows="3"></textarea></div>
         
-        <button onclick="submitDiagnostic()">Générer mes défis</button>
-        <div id="loading-diag" class="loading">Analyse et création de ton programme sur mesure...</div>
+        <button class="btn-primary" onclick="submitDiagnostic()">Générer mon programme</button>
+        <div id="loading-diag" class="loading">Création de tes défis sur-mesure...</div>
     </div>
 
     <div id="view-dashboard" class="view">
-        <h2>Tes défis de la semaine</h2>
-        <p>Choisis-en un aujourd'hui. Ces petits pas changent tout.</p>
+        <div class="center-wrapper"><div class="day-counter" id="dashboard-day">Jour 1 / 30</div></div>
+        <h2 id="dashboard-title">Bonjour</h2>
+        <p class="subtitle">Cette semaine, voici quelques petites expériences à tester. Sans pression.</p>
         
-        <div id="challenges-container">
-            </div>
+        <div class="badges-container">
+            <div class="badge" id="badge-1">🌟 1er Check-in !</div>
+            <div class="badge" id="badge-3">🔥 3 Jours de suite !</div>
+            <div class="badge" id="badge-7">👑 Semaine validée !</div>
+        </div>
+
+        <div id="challenges-container" style="margin-bottom: 25px;"></div>
         
-        <button onclick="showView('view-daily')" style="margin-top: 20px; background-color: var(--success);">Faire mon Check-in du jour</button>
+        <button id="btn-daily" class="btn-primary btn-success" onclick="setupDailyCheckin()">Faire mon Check-in du jour</button>
+        <button id="btn-weekly" class="btn-primary" style="display:none; background-color:#ED8936;" onclick="showView('view-weekly')">Faire mon bilan de la semaine</button>
     </div>
 
     <div id="view-daily" class="view">
-        <h2>Check-in du jour</h2>
+        <h2>Ton bilan express</h2>
+        <p class="subtitle">Moins de 30 secondes pour faire le point.</p>
+        
         <div class="form-group">
-            <label>Humeur du jour</label>
-            <div class="mood-selector">
-                <button class="mood-btn" onclick="setMood(this, 'Bas')">Basse</button>
-                <button class="mood-btn selected" onclick="setMood(this, 'Moyenne')">Moyenne</button>
-                <button class="mood-btn" onclick="setMood(this, 'Top')">Excellente</button>
+            <label>Comment t'es-tu senti(e) aujourd'hui ?</label>
+            <div class="emoji-selector">
+                <div class="emoji-btn" onclick="setMood(this, 'Bas')">😔</div>
+                <div class="emoji-btn selected" onclick="setMood(this, 'Moyenne')">😐</div>
+                <div class="emoji-btn" onclick="setMood(this, 'Top')">🙂</div>
             </div>
         </div>
         <div class="form-group">
-            <label>Quel défi as-tu essayé ?</label>
-            <select id="daily-action">
-                <option value="Aucun">Pas aujourd'hui (et c'est ok)</option>
-                <option value="Defi 1">Défi 1</option>
-                <option value="Defi 2">Défi 2</option>
-                <option value="Defi 3">Défi 3</option>
+            <label>As-tu testé un petit défi ? (c'est ok si non)</label>
+            <div class="checkbox-group" id="daily-challenges-list"></div>
+        </div>
+        <div class="form-group"><label>Une petite pensée ? (Optionnel)</label><textarea id="daily-note" rows="2"></textarea></div>
+        
+        <button class="btn-primary" onclick="submitDaily()">Valider ma journée</button>
+        <div id="loading-daily" class="loading">Enregistrement...</div>
+    </div>
+
+    <div id="view-weekly" class="view">
+        <h2>Bilan de la semaine</h2>
+        <p class="subtitle">Faisons le point sur ces 7 derniers jours.</p>
+        
+        <div class="form-group">
+            <label>Quels progrès as-tu remarqués ?</label>
+            <select id="weekly-progress">
+                <option value="Plus d'énergie">Plus d'énergie</option>
+                <option value="Plus de calme">Plus de calme</option>
+                <option value="Un peu plus d'élan">Un peu plus d'élan</option>
+                <option value="Pas vraiment de changement">Pas vraiment, et c'est ok</option>
             </select>
         </div>
-        <div class="form-group">
-            <label>Une note pour toi-même ?</label>
-            <textarea id="daily-note" rows="2" placeholder="Une petite victoire, une pensée..."></textarea>
-        </div>
-        <button onclick="submitDaily()">Valider ma journée</button>
-        <div id="loading-daily" class="loading">Enregistrement...</div>
+        <div class="form-group"><label>Qu'est-ce qui a été difficile ?</label><input type="text" id="weekly-diff" placeholder="Ex: Le manque de temps..."></div>
+        <div class="form-group"><label>Une pensée sur cette semaine ?</label><textarea id="weekly-feedback" rows="3"></textarea></div>
+        
+        <button class="btn-primary" onclick="submitWeekly()">Adapter mon programme</button>
+        <div id="loading-weekly" class="loading">Analyse et génération de nouveaux défis...</div>
+    </div>
+
+    <div id="view-feedback" class="view">
+        <h2 style="margin-top: 40px;">Bravo !</h2>
+        <p class="subtitle" id="feedback-message" style="font-size: 1.1em; color: var(--primary);">Les petites actions créent les grands changements.</p>
+        <button class="btn-primary" style="margin-top: 30px;" onclick="showView('view-dashboard')">Retour au menu</button>
     </div>
 
 </div>
 
 <script>
-    // --- CONFIGURATION ---
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzCINlvygsyP2iPouSRWAWn0Cn-rhWnn3zumV4KjKEHl5IZ7HqyKajpSB78xx0m_B4VzQ/exec";
-    let currentUser = null;
-    let currentMood = "Moyenne";
+    // --- ⚠️ CONFIGURATION : METS TON URL ICI ⚠️ ---
+    const GAS_URL = "Thttps://script.google.com/macros/s/AKfycbxugVyP3ZPKOYyeYD7uDI8dQ5gz6KUMONYOpwfTL4jQEM-jUz65IPp8Ia5JLqoq8YJf4w/exec"; 
+    
+    let appState = {
+        userId: localStorage.getItem('userId') || null,
+        userName: localStorage.getItem('userName') || '',
+        startDate: localStorage.getItem('startDate') || null,
+        checkinCount: parseInt(localStorage.getItem('checkinCount') || '0'),
+        currentWeek: parseInt(localStorage.getItem('currentWeek') || '1'),
+        currentMood: "Moyenne",
+        currentChallenges: JSON.parse(localStorage.getItem('currentChallenges') || '[]')
+    };
 
-    // --- NAVIGATION ---
+    window.onload = () => {
+        if (appState.userId && appState.currentChallenges.length > 0) {
+            updateDashboardUI();
+            showView('view-dashboard');
+        } else {
+            showView('view-onboarding');
+        }
+    };
+
     function showView(viewId) {
         document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
     }
 
-    // --- APPEL API GENERIQUE ---
     async function apiCall(action, data) {
         try {
             const response = await fetch(GAS_URL, {
                 method: 'POST',
-                // Mode 'no-cors' n'est pas utilisé ici car Apps Script doit retourner des données.
-                // Assure-toi que ton déploiement Apps Script est bien sur "Tous les utilisateurs" (Anyone).
                 body: JSON.stringify({ action: action, data: data }),
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8', // Contourne le preflight CORS
-                }
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
             });
             return await response.json();
         } catch (error) {
-            console.error("Erreur API:", error);
-            alert("Une erreur est survenue lors de la connexion au serveur.");
+            alert("Erreur de connexion au serveur.");
             return { success: false };
         }
     }
 
-    // --- FONCTIONS ---
-    async function login() {
-        const email = document.getElementById('login-email').value;
-        if(!email) return alert('Merci de saisir un email');
-        
+    async function startOnboarding() {
+        const name = document.getElementById('user-name').value.trim();
+        const age = document.getElementById('user-age').value.trim();
+        const city = document.getElementById('user-city').value.trim();
+        const email = document.getElementById('user-email').value.trim();
+
+        if(!email || !name) return alert('Le prénom et l\'email sont nécessaires.');
         document.getElementById('loading-login').style.display = 'block';
-        const res = await apiCall('login', { email: email });
+        
+        const res = await apiCall('login', { email: email, age: age, ville: city, situation: name });
         document.getElementById('loading-login').style.display = 'none';
 
         if (res.success) {
-            currentUser = res.userId;
+            appState.userId = res.userId;
+            appState.userName = name;
+            localStorage.setItem('userId', res.userId);
+            localStorage.setItem('userName', name);
+            
+            if (res.isNew || !appState.startDate) {
+                appState.startDate = new Date().toISOString();
+                localStorage.setItem('startDate', appState.startDate);
+            }
+
             if (res.isNew) {
+                document.getElementById('diag-title').innerText = `Faisons le point, ${name}`;
                 showView('view-diagnostic');
             } else {
-                loadDashboard();
+                updateDashboardUI();
+                showView('view-dashboard');
             }
         }
     }
 
     async function submitDiagnostic() {
         const data = {
-            userId: currentUser,
-            energy: document.getElementById('diag-energy').value,
-            sleep: document.getElementById('diag-sleep').value,
-            social: document.getElementById('diag-social').value,
-            activity: 5,
-            life_satisfaction: 5,
+            userId: appState.userId,
+            mental: document.getElementById('diag-mental').value,
+            corps: document.getElementById('diag-corps').value,
+            relations: document.getElementById('diag-relations').value,
+            environnement: document.getElementById('diag-environnement').value,
+            sens: document.getElementById('diag-sens').value,
+            creativite: document.getElementById('diag-creativite').value,
             free_text: document.getElementById('diag-free').value
         };
 
@@ -195,67 +272,99 @@
         document.getElementById('loading-diag').style.display = 'none';
 
         if(res.success && res.challenges) {
-            renderChallenges(res.challenges);
+            appState.currentChallenges = res.challenges;
+            localStorage.setItem('currentChallenges', JSON.stringify(res.challenges));
+            updateDashboardUI();
             showView('view-dashboard');
-        } else {
-            alert("Erreur lors de la création des défis.");
         }
     }
 
-    async function loadDashboard() {
-        const res = await apiCall('getDashboardData', { userId: currentUser });
-        if(res.success && res.challenges && res.challenges.length > 0) {
-            renderChallenges(res.challenges);
-            showView('view-dashboard');
-        } else {
-            showView('view-diagnostic'); // Redirige si pas de défis
-        }
-    }
+    function updateDashboardUI() {
+        document.getElementById('dashboard-title').innerText = `Bonjour ${appState.userName}`;
+        
+        const start = new Date(appState.startDate);
+        const now = new Date();
+        const diffDays = Math.ceil(Math.abs(now - start) / (1000 * 60 * 60 * 24));
+        document.getElementById('dashboard-day').innerText = `Jour ${diffDays} / 30`;
 
-    function renderChallenges(challenges) {
         const container = document.getElementById('challenges-container');
         container.innerHTML = '';
-        
-        // On met à jour le selecteur du daily check-in avec les vrais défis
-        const dailySelect = document.getElementById('daily-action');
-        dailySelect.innerHTML = '<option value="Aucun">Pas aujourd\'hui (et c\'est ok)</option>';
-
-        challenges.forEach((c, index) => {
-            // Affichage dans le dashboard
-            container.innerHTML += `<div class="challenge-card">🎯 ${c}</div>`;
-            
-            // Ajout dans le menu déroulant du check-in quotidien
-            if(c && c.trim() !== "") {
-                dailySelect.innerHTML += `<option value="${c}">${c}</option>`;
-            }
+        appState.currentChallenges.forEach(c => {
+            if(c) container.innerHTML += `<div class="challenge-card">🎯 ${c}</div>`;
         });
+
+        if(appState.checkinCount >= 1) document.getElementById('badge-1').style.display = 'inline-flex';
+        if(appState.checkinCount >= 3) document.getElementById('badge-3').style.display = 'inline-flex';
+        if(diffDays >= 7) document.getElementById('badge-7').style.display = 'inline-flex';
+
+        // Logique du Bilan Hebdomadaire
+        if (diffDays >= 7 * appState.currentWeek) {
+            document.getElementById('btn-daily').style.display = 'none';
+            document.getElementById('btn-weekly').style.display = 'block';
+        } else {
+            document.getElementById('btn-daily').style.display = 'block';
+            document.getElementById('btn-weekly').style.display = 'none';
+        }
+    }
+
+    function setupDailyCheckin() {
+        const list = document.getElementById('daily-challenges-list');
+        list.innerHTML = '';
+        appState.currentChallenges.forEach((c) => {
+            if(c) list.innerHTML += `<label class="checkbox-label"><input type="checkbox" value="${c}" class="challenge-checkbox">${c}</label>`;
+        });
+        showView('view-daily');
     }
 
     function setMood(btn, mood) {
-        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+        document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
-        currentMood = mood;
+        appState.currentMood = mood;
     }
 
     async function submitDaily() {
-        const data = {
-            userId: currentUser,
-            mood: currentMood,
-            action_done: document.getElementById('daily-action').value,
-            note: document.getElementById('daily-note').value
-        };
+        const checkboxes = document.querySelectorAll('.challenge-checkbox:checked');
+        let actionsDone = Array.from(checkboxes).map(cb => cb.value).join(" | ");
+        if(!actionsDone) actionsDone = "Aucun";
+
+        const data = { userId: appState.userId, mood: appState.currentMood, action_done: actionsDone, note: document.getElementById('daily-note').value };
 
         document.getElementById('loading-daily').style.display = 'block';
         const res = await apiCall('dailyCheckin', data);
         document.getElementById('loading-daily').style.display = 'none';
 
         if(res.success) {
-            alert("Super, un pas de plus ! Bravo pour aujourd'hui.");
-            showView('view-dashboard');
-            // Réinitialiser le formulaire
+            appState.checkinCount += 1;
+            localStorage.setItem('checkinCount', appState.checkinCount);
+            
             document.getElementById('daily-note').value = '';
-            document.getElementById('daily-action').value = 'Aucun';
-            setMood(document.querySelectorAll('.mood-btn')[1], 'Moyenne'); // Remettre sur moyenne par défaut
+            updateDashboardUI();
+            showView('view-feedback');
+        }
+    }
+
+    async function submitWeekly() {
+        const data = {
+            userId: appState.userId,
+            week_number: appState.currentWeek,
+            progress: document.getElementById('weekly-progress').value,
+            difficulties: document.getElementById('weekly-diff').value,
+            feedback: document.getElementById('weekly-feedback').value
+        };
+
+        document.getElementById('loading-weekly').style.display = 'block';
+        const res = await apiCall('submitWeeklyReview', data);
+        document.getElementById('loading-weekly').style.display = 'none';
+
+        if(res.success && res.challenges) {
+            appState.currentChallenges = res.challenges;
+            appState.currentWeek += 1;
+            localStorage.setItem('currentChallenges', JSON.stringify(res.challenges));
+            localStorage.setItem('currentWeek', appState.currentWeek);
+            
+            document.getElementById('feedback-message').innerText = "Nouveaux défis générés pour cette semaine !";
+            updateDashboardUI();
+            showView('view-feedback');
         }
     }
 </script>
